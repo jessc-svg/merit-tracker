@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Merit Tracker">
+<meta name="theme-color" content="#2d7a5f">
+<title>100 Days — Merit for Dad</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d7a5f'/><text y='.9em' font-size='72' x='50%' text-anchor='middle' dominant-baseline='hanging' dy='10'>🪷</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d7a5f'/><text y='.9em' font-size='72' x='50%' text-anchor='middle' dominant-baseline='hanging' dy='10'>🪷</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #2d7a5f;
+    --green-light: #e8f5f0;
+    --green-mid: #4a9e7f;
+    --amber: #c47d2a;
+    --amber-light: #fdf3e3;
+    --bg: #f7f4ef;
+    --surface: #ffffff;
+    --text: #1a1a18;
+    --text-muted: #6b6860;
+    --text-faint: #a09e99;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  .app { max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .header-title { font-family: 'Lora', serif; font-size: 18px; font-weight: 400; color: var(--text); }
+  .header-subtitle { font-size: 12px; color: var(--text-muted); font-style: italic; font-family: 'Lora', serif; }
+  .progress-wrap { margin-top: 12px; }
+  .progress-track { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.5s ease; }
+  .progress-labels { display: flex; justify-content: space-between; margin-top: 5px; }
+  .progress-labels span { font-size: 11px; color: var(--text-faint); }
+
+  /* Stats row */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px 16px; }
+  .stat { background: var(--surface); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; border: 1px solid var(--border); }
+  .stat-n { font-size: 20px; font-weight: 500; color: var(--text); line-height: 1; }
+  .stat-l { font-size: 10px; color: var(--text-faint); margin-top: 3px; }
+  .stat.green .stat-n { color: var(--green); }
+  .stat.amber .stat-n { color: var(--amber); }
+
+  /* Merit banner */
+  .merit-banner {
+    margin: 0 16px 14px;
+    background: var(--green-light);
+    border: 1px solid rgba(45,122,95,0.2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .merit-lotus { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .merit-text { font-family: 'Lora', serif; font-size: 13px; color: var(--green); line-height: 1.6; font-style: italic; }
+
+  /* Section */
+  .section-label { font-size: 11px; font-weight: 500; color: var(--text-faint); letter-spacing: 0.07em; text-transform: uppercase; padding: 0 20px; margin-bottom: 8px; }
+
+  /* Day card */
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 0 16px 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .day-card.is-today { border-color: var(--green); border-width: 1.5px; }
+  .day-card.complete { border-color: rgba(45,122,95,0.25); }
+  .day-card.skipped { border-color: rgba(196,125,42,0.25); }
+
+  .day-main { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+
+  .day-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500; flex-shrink: 0;
+    background: var(--bg); color: var(--text-faint); border: 1px solid var(--border);
+  }
+  .day-circle.complete { background: var(--green-light); color: var(--green); border-color: rgba(45,122,95,0.2); font-size: 18px; }
+  .day-circle.skipped { background: var(--amber-light); color: var(--amber); border-color: rgba(196,125,42,0.2); font-size: 18px; }
+
+  .day-info { flex: 1; min-width: 0; }
+  .day-num-row { display: flex; align-items: baseline; gap: 6px; }
+  .day-num { font-size: 14px; font-weight: 500; color: var(--text); }
+  .day-today-badge {
+    font-size: 10px; font-weight: 500; background: var(--green); color: white;
+    padding: 1px 7px; border-radius: 99px;
+  }
+  .day-date { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .day-status { font-size: 12px; margin-top: 2px; }
+  .day-status.complete { color: var(--green); }
+  .day-status.skipped { color: var(--amber); }
+  .day-status.pending { color: var(--text-faint); }
+
+  .day-actions { display: flex; gap: 6px; }
+
+  .btn {
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    padding: 7px 11px; font-size: 12px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; background: transparent; color: var(--text);
+    font-weight: 400; transition: all 0.15s; -webkit-appearance: none;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn.green { border-color: var(--green); color: var(--green); }
+  .btn.green:active { background: var(--green-light); }
+  .btn.amber { border-color: var(--amber); color: var(--amber); }
+  .btn.amber:active { background: var(--amber-light); }
+  .btn.ghost { border-color: var(--border); color: var(--text-faint); }
+  .btn.ghost:active { background: var(--bg); }
+
+  /* Note area */
+  .day-note-row { padding: 0 16px 12px; }
+  .day-note-input {
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 12px; font-size: 13px; font-family: 'Lora', serif; font-style: italic;
+    color: var(--text); background: var(--bg); resize: none; outline: none;
+    line-height: 1.5;
+  }
+  .day-note-input::placeholder { color: var(--text-faint); }
+  .day-note-input:focus { border-color: rgba(45,122,95,0.4); }
+
+  /* Show more */
+  .show-more {
+    margin: 4px 16px 0; width: calc(100% - 32px);
+    padding: 12px; border: 1px dashed var(--border-strong);
+    border-radius: var(--radius); background: transparent; cursor: pointer;
+    font-size: 13px; color: var(--text-muted); font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+  }
+  .show-more:active { background: var(--surface); }
+
+  /* Bottom tab bar */
+  .tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 20; max-width: 480px; margin: 0 auto;
+  }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px; cursor: pointer; }
+  .tab-icon { font-size: 22px; }
+  .tab-label { font-size: 10px; color: var(--text-faint); }
+  .tab.active .tab-label { color: var(--green); font-weight: 500; }
+
+  /* Install tip */
+  .install-tip {
+    margin: 0 16px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-size: 13px; color: var(--text-muted); line-height: 1.6;
+  }
+  .install-tip strong { color: var(--text); font-weight: 500; }
+  .install-tip .close-tip { float: right; font-size: 18px; cursor: pointer; color: var(--text-faint); line-height: 1; margin: -2px -4px 0 8px; }
+
+  /* Overview page */
+  .page { display: none; padding: 16px 0; }
+  .page.active { display: block; }
+
+  .overview-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; padding: 0 16px; margin-bottom: 20px; }
+  .ov-cell {
+    aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center;
+    justify-content: center; font-size: 9px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-faint);
+    transition: transform 0.1s;
+  }
+  .ov-cell:active { transform: scale(0.9); }
+  .ov-cell.complete { background: var(--green-light); border-color: rgba(45,122,95,0.2); color: var(--green); }
+  .ov-cell.skipped { background: var(--amber-light); border-color: rgba(196,125,42,0.2); color: var(--amber); }
+  .ov-cell.today { border-color: var(--green); border-width: 2px; }
+
+  .overview-legend { display: flex; gap: 16px; padding: 0 16px; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .legend-dot.complete { background: var(--green); }
+  .legend-dot.skipped { background: var(--amber); }
+  .legend-dot.pending { background: var(--bg); border: 1px solid var(--border-strong); }
+
+  .quote-section { margin: 0 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .quote-text { font-family: 'Lora', serif; font-size: 14px; font-style: italic; color: var(--text-muted); line-height: 1.7; }
+  .quote-attr { font-size: 11px; color: var(--text-faint); margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-title">🪷 100 Days for Dad</div>
+        <div class="header-subtitle">Vegetarian merit offering</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:22px;font-weight:500;color:var(--green)" id="hdr-complete">0</div>
+        <div style="font-size:10px;color:var(--text-faint)">days offered</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-labels"><span id="prog-left">0 of 100 complete</span><span id="prog-pct">0%</span></div>
+    </div>
+  </div>
+
+  <!-- Page: Daily -->
+  <div class="page active" id="page-daily">
+    <div style="padding: 14px 0 0;">
+      <div class="stats">
+        <div class="stat green"><div class="stat-n" id="s-complete">0</div><div class="stat-l">Complete</div></div>
+        <div class="stat"><div class="stat-n" id="s-remain">100</div><div class="stat-l">Left</div></div>
+        <div class="stat amber"><div class="stat-n" id="s-skipped">0</div><div class="stat-l">Skipped</div></div>
+        <div class="stat"><div class="stat-n" id="s-today">1</div><div class="stat-l">Today</div></div>
+      </div>
+
+      <div class="merit-banner">
+        <div class="merit-lotus">🙏</div>
+        <div class="merit-text" id="merit-text">Every meal you choose with compassion carries merit to your father. May he be at ease.</div>
+      </div>
+
+      <div id="install-tip" class="install-tip" style="display:none">
+        <span class="close-tip" onclick="closeTip()">×</span>
+        <strong>Add to home screen</strong><br>
+        On iPhone: tap the <strong>Share</strong> button (□↑) then <em>"Add to Home Screen"</em>.<br>
+        On Android: tap the <strong>⋮ menu</strong> then <em>"Add to Home Screen"</em>.
+      </div>
+
+      <div class="section-label">Your days</div>
+      <div id="days-list"></div>
+      <button class="show-more" id="show-more-btn" onclick="showMore()" style="display:none">Show more days ↓</button>
+    </div>
+  </div>
+
+  <!-- Page: Overview -->
+  <div class="page" id="page-overview">
+    <div style="padding: 16px 0 0;">
+      <div class="section-label" style="margin-bottom:12px">All 100 days</div>
+      <div class="overview-grid" id="overview-grid"></div>
+      <div class="overview-legend">
+        <div class="legend-item"><div class="legend-dot complete"></div> Complete</div>
+        <div class="legend-item"><div class="legend-dot skipped"></div> Skipped</div>
+        <div class="legend-item"><div class="legend-dot pending"></div> Pending</div>
+      </div>
+      <div class="quote-section">
+        <div class="quote-text" id="random-quote">"In the practice of tolerance, one's enemy is the best teacher."</div>
+        <div class="quote-attr">— A reflection for your journey</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabbar">
+    <div class="tab active" id="tab-daily" onclick="switchTab('daily')">
+      <div class="tab-icon">📅</div>
+      <div class="tab-label">Daily</div>
+    </div>
+    <div class="tab" id="tab-overview" onclick="switchTab('overview')">
+      <div class="tab-icon">🗓</div>
+      <div class="tab-label">Overview</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'merit100_v2';
+const START = new Date('2026-05-17T00:00:00');
+let days = [];
+let visibleUntil = 0;
+let showingAll = false;
+
+const QUOTES = [
+  "Compassion is the wish for another being to be free from suffering.",
+  "The life of one who lives with kindness is a prayer in motion.",
+  "Every act of love ripples outward in ways we may never know.",
+  "May your merit reach him like a gentle breeze on a warm day.",
+  "To choose not to harm is itself a form of healing.",
+  "The heart that gives freely creates space for peace to enter.",
+];
+
+function getDayN() {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  const s = new Date(START); s.setHours(0,0,0,0);
+  return Math.max(1, Math.min(100, Math.floor((now - s) / 86400000) + 1));
+}
+
+function dateFor(n) {
+  const d = new Date(START);
+  d.setDate(d.getDate() + n - 1);
+  return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) days = JSON.parse(raw);
+  } catch(e) {}
+  if (!days || days.length !== 100) {
+    days = Array.from({length:100}, (_,i) => ({n:i+1, status:'pending', note:''}));
+  }
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(days)); } catch(e) {}
+}
+
+async function markComplete(i) {
+  days[i].status = 'complete'; save(); renderAll();
+}
+async function markSkipped(i) {
+  days[i].status = 'skipped'; save(); renderAll();
+}
+async function markPending(i) {
+  days[i].status = 'pending'; save(); renderAll();
+}
+function saveNote(i, v) {
+  days[i].note = v; save();
+}
+
+function showMore() {
+  visibleUntil = Math.min(visibleUntil + 10, 100);
+  if (visibleUntil >= 100) showingAll = true;
+  renderDays();
+}
+
+function renderStats() {
+  const complete = days.filter(d=>d.status==='complete').length;
+  const skipped = days.filter(d=>d.status==='skipped').length;
+  const remaining = 100 - complete;
+  const today = getDayN();
+  const pct = complete;
+
+  document.getElementById('s-complete').textContent = complete;
+  document.getElementById('s-remain').textContent = remaining;
+  document.getElementById('s-skipped').textContent = skipped;
+  document.getElementById('s-today').textContent = today;
+  document.getElementById('hdr-complete').textContent = complete;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('prog-left').textContent = complete + ' of 100 complete';
+  document.getElementById('prog-pct').textContent = pct + '%';
+
+  const msgs = [
+    'Every meal you choose with compassion carries merit to your father. May he be at ease.',
+    'Your devotion is beautiful. ' + complete + ' days of merit offered to Dad.',
+    'Halfway there — your love for your father shines in each day.',
+    'Almost there — ' + remaining + ' more days of this precious offering.',
+    '100 days complete. What a gift of love you have given.',
+  ];
+  const mi = complete === 100 ? 4 : complete >= 75 ? 3 : complete >= 50 ? 2 : complete >= 10 ? 1 : 0;
+  document.getElementById('merit-text').textContent = msgs[mi];
+}
+
+function renderDays() {
+  const today = getDayN();
+  const list = document.getElementById('days-list');
+  list.innerHTML = '';
+
+  for (let i = 0; i < visibleUntil; i++) {
+    const d = days[i];
+    const isToday = d.n === today;
+    const card = document.createElement('div');
+    card.className = 'day-card' + (isToday ? ' is-today' : '') + (d.status !== 'pending' ? ' ' + d.status : '');
+
+    const circleContent = d.status === 'complete' ? '🌿' : d.status === 'skipped' ? '⏭' : d.n;
+    const statusTxt = d.status === 'complete' ? '🌿 Vegetarian — merit offered to Dad' :
+                      d.status === 'skipped' ? '⏭ Moved forward (business)' :
+                      isToday ? 'Today — record this day' :
+                      d.n < today ? 'Not yet recorded' : 'Upcoming';
+    const statusClass = d.status === 'complete' ? 'complete' : d.status === 'skipped' ? 'skipped' : 'pending';
+
+    let actions = '';
+    if (d.status === 'pending') {
+      actions = `<button class="btn green" onclick="markComplete(${i})">✓ Done</button><button class="btn amber" onclick="markSkipped(${i})">⏭ Skip</button>`;
+    } else {
+      actions = `<button class="btn ghost" onclick="markPending(${i})">Undo</button>`;
+    }
+
+    card.innerHTML = `
+      <div class="day-main">
+        <div class="day-circle ${d.status}">${circleContent}</div>
+        <div class="day-info">
+          <div class="day-num-row">
+            <span class="day-num">Day ${d.n}</span>
+            ${isToday ? '<span class="day-today-badge">Today</span>' : ''}
+          </div>
+          <div class="day-date">${dateFor(d.n)}</div>
+          <div class="day-status ${statusClass}">${statusTxt}</div>
+        </div>
+        <div class="day-actions">${actions}</div>
+      </div>
+      <div class="day-note-row">
+        <textarea class="day-note-input" rows="1" placeholder="A thought, prayer, or intention…" oninput="saveNote(${i},this.value)">${d.note || ''}</textarea>
+      </div>
+    `;
+    list.appendChild(card);
+  }
+
+  const btn = document.getElementById('show-more-btn');
+  if (!showingAll && visibleUntil < 100) {
+    btn.style.display = 'block';
+    btn.textContent = `Show more days (${100 - visibleUntil} remaining) ↓`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function renderOverview() {
+  const today = getDayN();
+  const grid = document.getElementById('overview-grid');
+  grid.innerHTML = '';
+  days.forEach((d, i) => {
+    const cell = document.createElement('div');
+    const cls = d.status === 'complete' ? 'complete' : d.status === 'skipped' ? 'skipped' : '';
+    const todayCls = d.n === today ? 'today' : '';
+    cell.className = `ov-cell ${cls} ${todayCls}`;
+    cell.textContent = d.status === 'complete' ? '✓' : d.status === 'skipped' ? '→' : d.n;
+    cell.title = `Day ${d.n}: ${d.status}`;
+    cell.onclick = () => { switchTab('daily'); setTimeout(() => { const el = document.querySelector(`[data-day="${i}"]`); if(el) el.scrollIntoView({behavior:'smooth'}); }, 100); };
+    grid.appendChild(cell);
+  });
+  document.getElementById('random-quote').textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+}
+
+function renderAll() {
+  renderStats();
+  renderDays();
+  renderOverview();
+}
+
+function switchTab(tab) {
+  document.getElementById('page-daily').classList.toggle('active', tab === 'daily');
+  document.getElementById('page-overview').classList.toggle('active', tab === 'overview');
+  document.getElementById('tab-daily').classList.toggle('active', tab === 'daily');
+  document.getElementById('tab-overview').classList.toggle('active', tab === 'overview');
+  if (tab === 'overview') renderOverview();
+}
+
+function closeTip() {
+  document.getElementById('install-tip').style.display = 'none';
+  localStorage.setItem('tip_closed', '1');
+}
+
+// Init
+load();
+const today = getDayN();
+visibleUntil = Math.min(today + 2, 100);
+
+if (!localStorage.getItem('tip_closed')) {
+  document.getElementById('install-tip').style.display = 'block';
+}
+
+renderAll();
+</script>
+</body>
+</html>
